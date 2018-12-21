@@ -1,7 +1,8 @@
 [CmdletBinding()]
 Param(
-	[String]$version,
-    [String]$collection = 'puppet'
+  [String]$version,
+  [String]$collection = 'puppet',
+  [String]$source_url = 'http://downloads.puppetlabs.com/'
 )
 # If an error is encountered, the script will stop instead of the default of "Continue"
 $ErrorActionPreference = "Stop"
@@ -28,8 +29,6 @@ else {
     $msi_name = "puppet-agent-${arch}-latest.msi"
 }
 
-$msi_source = "http://downloads.puppetlabs.com/windows/${collection}/${msi_name}"
-
 $date_time_stamp = (Get-Date -format s) -replace ':', '-'
 $msi_dest = Join-Path ([System.IO.Path]::GetTempPath()) "puppet-agent-$arch.msi"
 $install_log = Join-Path ([System.IO.Path]::GetTempPath()) "$date_time_stamp-puppet-install.log"
@@ -40,15 +39,26 @@ function DownloadPuppet {
   $webclient = New-Object system.net.webclient
 
   try {
-    $webclient.DownloadFile($msi_source,$msi_dest)
+    $webclient.DownloadFile("${source_url}/windows/${collection}/${msi_name}",$msi_dest)
   }
   catch [System.Net.WebException] {
-    # If we can't find the msi, then we may not be configured correctly
     if($_.Exception.Response.StatusCode -eq [system.net.httpstatuscode]::NotFound) {
-        Throw "Failed to download the Puppet Agent installer: $msi_source"
+      # Attempt to download from the same URL with no $collection dir
+      try {
+        Write-Verbose "Trying Download URL with no ${collection}"
+        $webclient.DownloadFile("${source_url}/windows/${msi_name}",$msi_dest)
+      }
+      catch [System.Net.WebException] {
+        # If we can't find the msi, then we may not be configured correctly
+        if($_.Exception.Response.StatusCode -eq [system.net.httpstatuscode]::NotFound) {
+          Throw "Attempted to download from ${source_url}/windows/${collection}/${msi_name} and ${source_url}/windows/${msi_name}, failed"
+        }
+        # Throw all other WebExceptions
+        Throw $_
+      }
+    } else {
+      Throw $_
     }
-    # Throw all other WebExceptions
-    Throw $_
   }
 }
 

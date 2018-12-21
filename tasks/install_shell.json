@@ -10,6 +10,10 @@
     "collection": {
       "description": "The Puppet collection to install from (defaults to puppet, which maps to the latest collection released)",
       "type": "Optional[Enum[puppet5, puppet6, puppet]]"
+    },
+    "source_url": {
+      "description": "The source URL to fetch agent packages from",
+      "type": "Optional[String]"
     }
   }
 }
