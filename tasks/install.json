@@ -12,6 +12,10 @@
     "source_url": {
       "description": "The source URL to fetch agent packages from",
       "type": "Optional[String]"
+    },
+    "gpg_key_url": {
+      "description": "The source URL to fetch GPG keys from (only applies to SLES installations)",
+      "type": "Optional[String]"
     }
   },
   "implementations": [
